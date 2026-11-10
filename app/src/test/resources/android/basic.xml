@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StringParity</string>
+    <string name="greeting">Hello, world</string>
+    <string name="empty"></string>
+</resources>

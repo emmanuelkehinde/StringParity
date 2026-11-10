@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE resources [
+    <!ENTITY brand "Acme">
+]>
+<resources>
+    <string name="entities">Fish &amp; Chips &lt;3 &#169; &brand;</string>
+    <string name="cdata"><![CDATA[<b>Bold</b> & \n literal]]></string>
+    <string name="mixed">Click <![CDATA[<here>]]> now</string>
+    <string name="markup">Hello <b>bold</b> and <xliff:g xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" id="name">%1$s</xliff:g></string>
+</resources>

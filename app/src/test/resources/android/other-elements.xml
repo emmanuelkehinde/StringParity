@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- a comment -->
+    <string name="first">One</string>
+    <plurals name="items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <string-array name="colors">
+        <item>Red</item>
+    </string-array>
+    <color name="accent">#ff0000</color>
+    <integer name="count">3</integer>
+    <string name="second">Two</string>
+</resources>

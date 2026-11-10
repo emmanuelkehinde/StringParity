@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="newline">Line one\nLine two</string>
+    <string name="tab">Name\tValue</string>
+    <string name="apostrophe">Don\'t panic</string>
+    <string name="quote">Say \"hi\"</string>
+    <string name="at_sign">\@home</string>
+    <string name="question">\?attr</string>
+    <string name="backslash">C:\\temp</string>
+    <string name="unicode">Caf\u00e9 \u20AC</string>
+    <string name="quoted">"  keep   these  spaces  "</string>
+    <string name="quoted_apostrophe">"Don't panic"</string>
+    <string name="collapse">
+        spread   over
+        several lines
+    </string>
+</resources>

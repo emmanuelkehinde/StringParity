@@ -1,11 +1,14 @@
 package dev.stringparity
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.path
+import dev.stringparity.android.AndroidResLoader
+import dev.stringparity.android.StringsParseException
 
 class StringParity : CliktCommand(name = "stringparity") {
     override fun help(context: Context) =
@@ -20,7 +23,19 @@ class StringParity : CliktCommand(name = "stringparity") {
         .required()
 
     override fun run() {
-        echo("Android: $android")
+        val locales = try {
+            AndroidResLoader.load(android)
+        } catch (e: StringsParseException) {
+            throw CliktError(e.message)
+        }
+        if (locales.isEmpty()) throw CliktError("No strings.xml files found in $android")
+
+        echo("Android strings per locale:")
+        for (locale in locales) {
+            val skipped = locale.entries.count { !it.translatable }
+            val note = if (skipped > 0) " ($skipped not translatable)" else ""
+            echo("  ${locale.locale}: ${locale.entries.size}$note")
+        }
         echo("iOS: $ios")
         echo("Comparison isn't implemented yet.")
     }

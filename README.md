@@ -15,7 +15,7 @@ Teams that build the same app natively for Android and iOS and keep two sets of 
 
 ## Status
 
-Early development. The command-line options are in place. Parsing and comparison are in progress, and the plan is in [ROADMAP.md](ROADMAP.md).
+Early development. The Android side works: `--android` reads a `res` directory or one `strings.xml` and prints the number of strings per locale. The iOS String Catalog parser and the comparison are not written yet, so `--ios` is accepted but not read. The plan is in [ROADMAP.md](ROADMAP.md).
 
 ## Built with
 

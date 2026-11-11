@@ -15,7 +15,9 @@ Teams that build the same app natively for Android and iOS and keep two sets of 
 
 ## Status
 
-Early development. The Android side works: `--android` reads a `res` directory or one `strings.xml` and prints the number of strings per locale. The iOS String Catalog parser and the comparison are not written yet, so `--ios` is accepted but not read. The plan is in [ROADMAP.md](ROADMAP.md).
+Early development. Both parsers work. `--android` reads a `res` directory or one `strings.xml`, and `--ios` reads a String Catalog. Each prints the number of strings per locale. The comparison is not written yet. The plan is in [ROADMAP.md](ROADMAP.md).
+
+In a String Catalog, the `sourceLanguage` locale is listed as `default` so it lines up with Android's `values` folder. A key with no source translation uses the key as its value, as Xcode does. Keys marked `"shouldTranslate": false` count as not translatable. Plural and device variations are skipped and counted, because Android `<plurals>` are not read yet either.
 
 ## Built with
 
@@ -33,6 +35,8 @@ cd StringParity
   --android path/to/app/src/main/res \
   --ios path/to/Localizable.xcstrings
 ```
+
+Give `--android`, `--ios` or both. At least one is required.
 
 Run the tests with `./gradlew test`.
 

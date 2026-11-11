@@ -1,0 +1,47 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "bye" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bye"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Au revoir"
+          }
+        }
+      }
+    },
+    "hello" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bonjour"
+          }
+        },
+        "pt_BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Olá"
+          }
+        }
+      }
+    },
+    "Welcome back" : {
+      "extractionState" : "manual"
+    }
+  },
+  "version" : "1.0"
+}

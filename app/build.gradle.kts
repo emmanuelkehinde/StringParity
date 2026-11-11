@@ -9,6 +9,7 @@ repositories {
 
 dependencies {
     implementation(libs.clikt)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(kotlin("test"))
 }
 

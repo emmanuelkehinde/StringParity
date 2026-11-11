@@ -73,4 +73,25 @@ class StringParityTest {
         assertEquals(1, result.statusCode)
         assertTrue(result.stderr.contains("malformed.xcstrings"), result.stderr)
     }
+
+    @Test
+    fun `exits with zero when both platforms have the same keys`() {
+        val result = StringParity().test("--android ${resource("res-ok")} --ios ${resource("ios/matches-res-ok.xcstrings")}")
+        assertEquals(0, result.statusCode, result.output)
+        assertTrue(result.stdout.contains("Android strings per locale:"), result.stdout)
+        assertTrue(result.stdout.contains("No missing keys."), result.stdout)
+    }
+
+    @Test
+    fun `reports missing keys and locales and exits with one`() {
+        val result = StringParity().test("--android ${resource("res-ok")} --ios ${resource("ios/basic.xcstrings")}")
+        assertEquals(1, result.statusCode, result.output)
+        val out = result.stdout
+        assertTrue(out.contains("Missing on Android (1):\n  Welcome back"), out)
+        assertTrue(out.contains("Locale fr-CA is missing on iOS (2 strings on Android)"), out)
+        assertTrue(out.contains("Locale sr-Latn is missing on iOS (1 string on Android)"), out)
+        assertTrue(out.contains("Locale pt-BR is missing on Android (1 string on iOS)"), out)
+        assertTrue(out.contains("Locale fr:\n  Missing on Android (1):\n    bye"), out)
+        assertTrue(out.contains("Found 5 missing items."), out)
+    }
 }

@@ -4,10 +4,10 @@
 
 - [x] Parse Android `strings.xml` files from a `res` directory, one per `values-<locale>` folder, including escaping and `translatable="false"`.
 - [x] Parse iOS String Catalogs (`.xcstrings`), which are JSON, for every locale they contain, including `sourceLanguage` and `"shouldTranslate": false`. Plural and device variations are skipped for now.
-- [ ] Report keys missing from either platform and per locale.
+- [x] Report keys missing from either platform and per locale, with a non-zero exit code.
 - [ ] Normalise placeholders so `%1$s`, `%s`, `%@` and `%d` compare correctly, and report mismatches.
 - [ ] Map keys that are named differently on each platform with a YAML file.
-- [ ] Text and JSON output, with a non-zero exit code when problems are found.
+- [ ] JSON output. Text output and the non-zero exit code are done.
 - [ ] GitHub Actions workflow that builds and tests every pull request.
 - [ ] A composite GitHub Action so other projects can run StringParity in CI.
 

@@ -3,6 +3,7 @@ package dev.stringparity
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.option
@@ -26,15 +27,23 @@ class StringParity : CliktCommand(name = "stringparity") {
 
     override fun run() {
         if (android == null && ios == null) throw UsageError("Give --android, --ios or both.")
-        android?.let { printCounts("Android strings per locale:", loadAndroid(it)) }
-        ios?.let { path ->
-            val catalog = loadIos(path)
-            printCounts("iOS strings per locale (source language ${catalog.sourceLanguage}):", catalog.locales)
-            if (catalog.variationKeys.isNotEmpty()) {
-                val n = catalog.variationKeys.size
+        val androidLocales = android?.let { loadAndroid(it) }
+        val catalog = ios?.let { loadIos(it) }
+
+        androidLocales?.let { printCounts("Android strings per locale:", it) }
+        catalog?.let {
+            printCounts("iOS strings per locale (source language ${it.sourceLanguage}):", it.locales)
+            if (it.variationKeys.isNotEmpty()) {
+                val n = it.variationKeys.size
                 echo("  Skipped $n ${if (n == 1) "key" else "keys"} with plural or device variations")
             }
         }
+        if (androidLocales == null || catalog == null) return
+
+        val report = ParityChecker.compare(androidLocales, catalog.locales, catalog.sourceLanguage)
+        echo()
+        echo(report.toText())
+        if (report.problemCount > 0) throw ProgramResult(1)
     }
 
     private fun loadAndroid(path: Path): List<LocaleStrings> {

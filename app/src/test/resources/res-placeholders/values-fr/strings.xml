@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="greeting">Bonjour %1$s, vous avez %2$d nouveaux messages</string>
+    <string name="price">Total : %.2f</string>
+    <string name="progress">100%% terminé</string>
+    <string name="files">%d fichiers</string>
+</resources>

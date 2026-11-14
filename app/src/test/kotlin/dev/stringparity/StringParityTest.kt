@@ -79,7 +79,7 @@ class StringParityTest {
         val result = StringParity().test("--android ${resource("res-ok")} --ios ${resource("ios/matches-res-ok.xcstrings")}")
         assertEquals(0, result.statusCode, result.output)
         assertTrue(result.stdout.contains("Android strings per locale:"), result.stdout)
-        assertTrue(result.stdout.contains("No missing keys."), result.stdout)
+        assertTrue(result.stdout.contains("No missing keys or placeholder mismatches."), result.stdout)
     }
 
     @Test
@@ -93,5 +93,28 @@ class StringParityTest {
         assertTrue(out.contains("Locale pt-BR is missing on Android (1 string on iOS)"), out)
         assertTrue(out.contains("Locale fr:\n  Missing on Android (1):\n    bye"), out)
         assertTrue(out.contains("Found 5 missing items."), out)
+    }
+
+    @Test
+    fun `exits with zero when placeholders match across platforms`() {
+        val result = StringParity().test("--android ${resource("res-placeholders")} --ios ${resource("ios/placeholders-ok.xcstrings")}")
+        assertEquals(0, result.statusCode, result.output)
+        assertTrue(result.stdout.contains("No missing keys or placeholder mismatches."), result.stdout)
+    }
+
+    @Test
+    fun `reports placeholder mismatches and exits with one`() {
+        val result = StringParity().test("--android ${resource("res-placeholders")} --ios ${resource("ios/placeholders-bad.xcstrings")}")
+        assertEquals(1, result.statusCode, result.output)
+        val expected = """
+            Placeholder mismatches (3):
+              price in default, types differ: Android %.2f, iOS %lld
+              greeting in fr, types differ: Android %1${'$'}s %2${'$'}d, iOS %@ %@
+              price in fr, types differ: Android %.2f, iOS %lld
+            Placeholders that differ from the default (1):
+              greeting in fr on iOS, types differ: %@ %@, default %@ %d
+            Found 4 placeholder mismatches.
+        """.trimIndent()
+        assertTrue(result.stdout.endsWith(expected + "\n"), result.stdout)
     }
 }

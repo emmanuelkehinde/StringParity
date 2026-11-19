@@ -10,6 +10,7 @@ repositories {
 dependencies {
     implementation(libs.clikt)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.snakeyaml.engine)
     testImplementation(kotlin("test"))
 }
 

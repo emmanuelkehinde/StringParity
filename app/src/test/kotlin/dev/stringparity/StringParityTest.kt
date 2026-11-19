@@ -117,4 +117,37 @@ class StringParityTest {
         """.trimIndent()
         assertTrue(result.stdout.endsWith(expected + "\n"), result.stdout)
     }
+
+    @Test
+    fun `reports renamed keys as missing without a mapping`() {
+        val result = StringParity().test("--android ${resource("res-mapped")} --ios ${resource("ios/mapped.xcstrings")}")
+        assertEquals(1, result.statusCode, result.output)
+        assertTrue(result.stdout.contains("Missing on iOS (1):\n  login_title"), result.stdout)
+        assertTrue(result.stdout.contains("Missing on Android (1):\n  Log in"), result.stdout)
+    }
+
+    @Test
+    fun `treats mapped keys as the same string`() {
+        val result = StringParity().test(
+            "--android ${resource("res-mapped")} --ios ${resource("ios/mapped.xcstrings")} --mapping ${resource("mapping/valid.yaml")}",
+        )
+        assertEquals(0, result.statusCode, result.output)
+        assertTrue(result.stdout.contains("No missing keys or placeholder mismatches."), result.stdout)
+    }
+
+    @Test
+    fun `fails with a clear message on an invalid mapping file`() {
+        val result = StringParity().test(
+            "--android ${resource("res-mapped")} --ios ${resource("ios/mapped.xcstrings")} --mapping ${resource("mapping/no-keys.yaml")}",
+        )
+        assertEquals(1, result.statusCode)
+        assertTrue(result.stderr.contains("no-keys.yaml"), result.stderr)
+    }
+
+    @Test
+    fun `mapping needs both platforms`() {
+        val result = StringParity().test("--android ${resource("res-mapped")} --mapping ${resource("mapping/valid.yaml")}")
+        assertEquals(1, result.statusCode)
+        assertTrue(result.stderr.contains("--mapping needs both"), result.stderr)
+    }
 }

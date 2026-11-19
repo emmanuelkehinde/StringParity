@@ -6,7 +6,7 @@
 - [x] Parse iOS String Catalogs (`.xcstrings`), which are JSON, for every locale they contain, including `sourceLanguage` and `"shouldTranslate": false`. Plural and device variations are skipped for now.
 - [x] Report keys missing from either platform and per locale, with a non-zero exit code.
 - [x] Normalise placeholders so `%1$s`, `%s`, `%@` and `%d` compare correctly, and report mismatches.
-- [ ] Map keys that are named differently on each platform with a YAML file.
+- [x] Map keys that are named differently on each platform with a YAML file.
 - [ ] JSON output. Text output and the non-zero exit code are done.
 - [ ] GitHub Actions workflow that builds and tests every pull request.
 - [ ] A composite GitHub Action so other projects can run StringParity in CI.

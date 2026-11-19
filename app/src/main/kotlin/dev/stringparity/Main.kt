@@ -25,8 +25,15 @@ class StringParity : CliktCommand(name = "stringparity") {
     val ios by option("--ios", help = "Path to the iOS .xcstrings String Catalog")
         .path(mustExist = true, canBeDir = false)
 
+    val mapping by option(
+        "--mapping",
+        help = "YAML file that maps Android keys to iOS keys for strings named differently on each platform",
+    ).path(mustExist = true, canBeDir = false)
+
     override fun run() {
         if (android == null && ios == null) throw UsageError("Give --android, --ios or both.")
+        if (mapping != null && (android == null || ios == null)) throw UsageError("--mapping needs both --android and --ios.")
+        val keyMapping = mapping?.let { loadMapping(it) } ?: KeyMapping.EMPTY
         val androidLocales = android?.let { loadAndroid(it) }
         val catalog = ios?.let { loadIos(it) }
 
@@ -40,7 +47,7 @@ class StringParity : CliktCommand(name = "stringparity") {
         }
         if (androidLocales == null || catalog == null) return
 
-        val report = ParityChecker.compare(androidLocales, catalog.locales, catalog.sourceLanguage)
+        val report = ParityChecker.compare(keyMapping.apply(androidLocales), catalog.locales, catalog.sourceLanguage)
         echo()
         echo(report.toText())
         if (report.problemCount > 0) throw ProgramResult(1)
@@ -54,6 +61,12 @@ class StringParity : CliktCommand(name = "stringparity") {
         }
         if (locales.isEmpty()) throw CliktError("No strings.xml files found in $path")
         return locales
+    }
+
+    private fun loadMapping(path: Path): KeyMapping = try {
+        KeyMapping.parse(path)
+    } catch (e: MappingParseException) {
+        throw CliktError(e.message)
     }
 
     private fun loadIos(path: Path): StringCatalog = try {

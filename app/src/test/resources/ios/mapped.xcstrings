@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "hello" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hello" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Bonjour" } }
+      }
+    },
+    "Log in" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Log in" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Connexion" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

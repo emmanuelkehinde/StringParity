@@ -36,7 +36,7 @@ cd StringParity
   --ios path/to/Localizable.xcstrings
 ```
 
-Give `--android`, `--ios` or both. At least one is required.
+Give `--android`, `--ios` or both. At least one is required. `--mapping` is optional and needs both.
 
 With both, StringParity compares the keys and placeholders and prints a report like this:
 
@@ -62,6 +62,26 @@ It exits with code 1 when anything is missing or a placeholder doesn't match, an
 - Keys translated in a locale on one platform and not on the other. A key that neither platform translates in a locale is not reported.
 
 Keys marked not translatable on the platform that has them are left out, since they are often platform-only values such as API keys. Locale tags must match exactly, so Android `values-zh-rCN` (`zh-CN`) and iOS `zh-Hans` count as different locales. If Android has a folder for the iOS source language, such as `values-en`, it is compared with the iOS source strings.
+
+### Keys named differently on each platform
+
+If the same string has one key on Android and another on iOS, list the pair in a YAML file and pass it with `--mapping`:
+
+```yaml
+# Android key on the left, iOS key on the right.
+keys:
+  login_title: Log in
+  settings_header: Settings
+```
+
+```sh
+./app/build/install/stringparity/bin/stringparity \
+  --android path/to/app/src/main/res \
+  --ios path/to/Localizable.xcstrings \
+  --mapping key-mapping.yaml
+```
+
+StringParity renames each listed Android key to its iOS key before comparing, in every locale. The two strings are then checked for missing translations and placeholder mismatches like any other pair, and the report uses the iOS key. Keys not in the file are compared by name. The file is invalid, and the command exits with code 1, when it is not valid YAML, has an entry other than `keys`, has a key or value that is not text, or maps two Android keys to the same iOS key.
 
 ### Placeholders
 

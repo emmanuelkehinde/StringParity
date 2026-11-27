@@ -7,7 +7,7 @@
 - [x] Report keys missing from either platform and per locale, with a non-zero exit code.
 - [x] Normalise placeholders so `%1$s`, `%s`, `%@` and `%d` compare correctly, and report mismatches.
 - [x] Map keys that are named differently on each platform with a YAML file.
-- [ ] JSON output. Text output and the non-zero exit code are done.
+- [x] JSON output with `--format json`, alongside the text report and the non-zero exit code.
 - [ ] GitHub Actions workflow that builds and tests every pull request.
 - [ ] A composite GitHub Action so other projects can run StringParity in CI.
 

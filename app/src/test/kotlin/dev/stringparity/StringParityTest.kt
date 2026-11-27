@@ -2,6 +2,13 @@ package dev.stringparity
 
 import com.github.ajalt.clikt.testing.test
 import java.nio.file.Path
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.io.path.pathString
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -149,5 +156,120 @@ class StringParityTest {
         val result = StringParity().test("--android ${resource("res-mapped")} --mapping ${resource("mapping/valid.yaml")}")
         assertEquals(1, result.statusCode)
         assertTrue(result.stderr.contains("--mapping needs both"), result.stderr)
+    }
+
+    private fun parseJson(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
+
+    private fun JsonObject.strings(name: String) = getValue(name).jsonArray.map { it.jsonPrimitive.content }
+
+    @Test
+    fun `prints an empty json report when both platforms match`() {
+        val result = StringParity().test(
+            "--android ${resource("res-ok")} --ios ${resource("ios/matches-res-ok.xcstrings")} --format json",
+        )
+        assertEquals(0, result.statusCode, result.output)
+        assertEquals("", result.stderr)
+        val json = parseJson(result.stdout)
+        assertEquals(
+            listOf("missingKeys", "missingLocales", "localeGaps", "placeholderMismatches", "placeholderDrift", "summary"),
+            json.keys.toList(),
+        )
+        for (group in listOf("missingKeys", "missingLocales")) {
+            val platforms = json.getValue(group).jsonObject
+            assertEquals(listOf("android", "ios"), platforms.keys.toList())
+            assertTrue(platforms.values.all { (it as JsonArray).isEmpty() }, result.stdout)
+        }
+        assertEquals(emptyList(), json.getValue("localeGaps").jsonArray)
+        assertEquals(emptyList(), json.getValue("placeholderMismatches").jsonArray)
+        assertEquals(emptyList(), json.getValue("placeholderDrift").jsonArray)
+        val summary = json.getValue("summary").jsonObject
+        assertEquals(listOf("missing", "placeholderMismatches", "problems"), summary.keys.toList())
+        assertTrue(summary.values.all { it.jsonPrimitive.int == 0 }, result.stdout)
+    }
+
+    @Test
+    fun `reports missing keys and locales as json and exits with one`() {
+        val result = StringParity().test(
+            "--android ${resource("res-ok")} --ios ${resource("ios/basic.xcstrings")} --format json",
+        )
+        assertEquals(1, result.statusCode, result.output)
+        val json = parseJson(result.stdout)
+
+        val missingKeys = json.getValue("missingKeys").jsonObject
+        assertEquals(listOf("Welcome back"), missingKeys.strings("android"))
+        assertEquals(emptyList(), missingKeys.strings("ios"))
+
+        val missingLocales = json.getValue("missingLocales").jsonObject
+        fun locales(platform: String) = missingLocales.getValue(platform).jsonArray.map {
+            it.jsonObject.getValue("locale").jsonPrimitive.content to it.jsonObject.getValue("strings").jsonPrimitive.int
+        }
+        assertEquals(listOf("pt-BR" to 1), locales("android"))
+        assertEquals(listOf("fr-CA" to 2, "sr-Latn" to 1), locales("ios"))
+
+        val gap = json.getValue("localeGaps").jsonArray.single().jsonObject
+        assertEquals("fr", gap.getValue("locale").jsonPrimitive.content)
+        assertEquals(listOf("bye"), gap.strings("missingOnAndroid"))
+        assertEquals(emptyList(), gap.strings("missingOnIos"))
+
+        val summary = json.getValue("summary").jsonObject
+        assertEquals(5, summary.getValue("missing").jsonPrimitive.int)
+        assertEquals(0, summary.getValue("placeholderMismatches").jsonPrimitive.int)
+        assertEquals(5, summary.getValue("problems").jsonPrimitive.int)
+    }
+
+    @Test
+    fun `reports placeholder mismatches as json`() {
+        val result = StringParity().test(
+            "--android ${resource("res-placeholders")} --ios ${resource("ios/placeholders-bad.xcstrings")} --format json",
+        )
+        assertEquals(1, result.statusCode, result.output)
+        val json = parseJson(result.stdout)
+
+        val mismatches = json.getValue("placeholderMismatches").jsonArray.map { it.jsonObject }
+        assertEquals(listOf("price", "greeting", "price"), mismatches.map { it.getValue("key").jsonPrimitive.content })
+        assertEquals(listOf("default", "fr", "fr"), mismatches.map { it.getValue("locale").jsonPrimitive.content })
+        val greeting = mismatches[1]
+        assertEquals("types differ", greeting.getValue("reason").jsonPrimitive.content)
+        assertEquals(listOf("%1${'$'}s", "%2${'$'}d"), greeting.strings("android"))
+        assertEquals(listOf("%@", "%@"), greeting.strings("ios"))
+
+        val drift = json.getValue("placeholderDrift").jsonArray.single().jsonObject
+        assertEquals("greeting", drift.getValue("key").jsonPrimitive.content)
+        assertEquals("ios", drift.getValue("platform").jsonPrimitive.content)
+        assertEquals(listOf("%@", "%@"), drift.strings("translated"))
+        assertEquals(listOf("%@", "%d"), drift.strings("default"))
+
+        assertEquals(4, json.getValue("summary").jsonObject.getValue("placeholderMismatches").jsonPrimitive.int)
+    }
+
+    @Test
+    fun `json output is the same on every run`() {
+        val args = "--android ${resource("res-ok")} --ios ${resource("ios/basic.xcstrings")} --format json"
+        assertEquals(StringParity().test(args).stdout, StringParity().test(args).stdout)
+    }
+
+    @Test
+    fun `json format needs both platforms`() {
+        val result = StringParity().test("--android ${resource("res-ok")} --format json")
+        assertEquals(1, result.statusCode)
+        assertEquals("", result.stdout)
+        assertTrue(result.stderr.contains("--format json needs both"), result.stderr)
+    }
+
+    @Test
+    fun `json format sends input errors to stderr`() {
+        val result = StringParity().test(
+            "--android ${resource("res-ok")} --ios ${resource("ios/malformed.xcstrings")} --format json",
+        )
+        assertEquals(1, result.statusCode)
+        assertEquals("", result.stdout)
+        assertTrue(result.stderr.contains("malformed.xcstrings"), result.stderr)
+    }
+
+    @Test
+    fun `rejects an unknown format`() {
+        val result = StringParity().test("--android ${resource("res-ok")} --format xml")
+        assertEquals(1, result.statusCode)
+        assertTrue(result.stderr.contains("--format"), result.stderr)
     }
 }

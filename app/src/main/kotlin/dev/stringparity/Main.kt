@@ -6,7 +6,9 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.main
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.path
 import dev.stringparity.android.AndroidResLoader
 import dev.stringparity.android.StringsParseException
@@ -30,26 +32,38 @@ class StringParity : CliktCommand(name = "stringparity") {
         help = "YAML file that maps Android keys to iOS keys for strings named differently on each platform",
     ).path(mustExist = true, canBeDir = false)
 
+    val format by option("--format", help = "Print the report as text or json. JSON needs both --android and --ios")
+        .choice("text", "json")
+        .default("text")
+
     override fun run() {
         if (android == null && ios == null) throw UsageError("Give --android, --ios or both.")
         if (mapping != null && (android == null || ios == null)) throw UsageError("--mapping needs both --android and --ios.")
+        if (format == "json" && (android == null || ios == null)) throw UsageError("--format json needs both --android and --ios.")
         val keyMapping = mapping?.let { loadMapping(it) } ?: KeyMapping.EMPTY
         val androidLocales = android?.let { loadAndroid(it) }
         val catalog = ios?.let { loadIos(it) }
 
-        androidLocales?.let { printCounts("Android strings per locale:", it) }
-        catalog?.let {
-            printCounts("iOS strings per locale (source language ${it.sourceLanguage}):", it.locales)
-            if (it.variationKeys.isNotEmpty()) {
-                val n = it.variationKeys.size
-                echo("  Skipped $n ${if (n == 1) "key" else "keys"} with plural or device variations")
+        val json = format == "json"
+        if (!json) {
+            androidLocales?.let { printCounts("Android strings per locale:", it) }
+            catalog?.let {
+                printCounts("iOS strings per locale (source language ${it.sourceLanguage}):", it.locales)
+                if (it.variationKeys.isNotEmpty()) {
+                    val n = it.variationKeys.size
+                    echo("  Skipped $n ${if (n == 1) "key" else "keys"} with plural or device variations")
+                }
             }
         }
         if (androidLocales == null || catalog == null) return
 
         val report = ParityChecker.compare(keyMapping.apply(androidLocales), catalog.locales, catalog.sourceLanguage)
-        echo()
-        echo(report.toText())
+        if (json) {
+            echo(report.toJson())
+        } else {
+            echo()
+            echo(report.toText())
+        }
         if (report.problemCount > 0) throw ProgramResult(1)
     }
 

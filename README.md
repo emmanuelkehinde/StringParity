@@ -36,7 +36,7 @@ cd StringParity
   --ios path/to/Localizable.xcstrings
 ```
 
-Give `--android`, `--ios` or both. At least one is required. `--mapping` is optional and needs both.
+Give `--android`, `--ios` or both. At least one is required. `--mapping` and `--format json` are optional and need both.
 
 With both, StringParity compares the keys and placeholders and prints a report like this:
 
@@ -62,6 +62,102 @@ It exits with code 1 when anything is missing or a placeholder doesn't match, an
 - Keys translated in a locale on one platform and not on the other. A key that neither platform translates in a locale is not reported.
 
 Keys marked not translatable on the platform that has them are left out, since they are often platform-only values such as API keys. Locale tags must match exactly, so Android `values-zh-rCN` (`zh-CN`) and iOS `zh-Hans` count as different locales. If Android has a folder for the iOS source language, such as `values-en`, it is compared with the iOS source strings.
+
+### JSON output
+
+Pass `--format json` to print the report as one JSON object instead of text. The default is `--format text`. For the report above, the output is:
+
+```sh
+./app/build/install/stringparity/bin/stringparity \
+  --android path/to/app/src/main/res \
+  --ios path/to/Localizable.xcstrings \
+  --format json
+```
+
+```json
+{
+    "missingKeys": {
+        "android": [
+            "Welcome back"
+        ],
+        "ios": []
+    },
+    "missingLocales": {
+        "android": [],
+        "ios": [
+            {
+                "locale": "fr-CA",
+                "strings": 2
+            }
+        ]
+    },
+    "localeGaps": [
+        {
+            "locale": "fr",
+            "missingOnAndroid": [
+                "bye"
+            ],
+            "missingOnIos": []
+        }
+    ],
+    "placeholderMismatches": [
+        {
+            "key": "price",
+            "locale": "default",
+            "reason": "types differ",
+            "android": [
+                "%.2f"
+            ],
+            "ios": [
+                "%lld"
+            ]
+        },
+        {
+            "key": "greeting",
+            "locale": "fr",
+            "reason": "count differs",
+            "android": [
+                "%1$s",
+                "%2$d"
+            ],
+            "ios": [
+                "%@"
+            ]
+        }
+    ],
+    "placeholderDrift": [
+        {
+            "key": "greeting",
+            "locale": "fr",
+            "platform": "ios",
+            "reason": "count differs",
+            "translated": [
+                "%@"
+            ],
+            "default": [
+                "%@",
+                "%d"
+            ]
+        }
+    ],
+    "summary": {
+        "missing": 3,
+        "placeholderMismatches": 3,
+        "problems": 6
+    }
+}
+```
+
+Each field is always present, in this order, and an empty list means nothing was found. The fields are:
+
+- `missingKeys`: default-locale keys missing on `android` and on `ios`.
+- `missingLocales`: locales missing on `android` and on `ios`. `strings` is the number of strings the other platform has in that locale.
+- `localeGaps`: locales both platforms have, with the keys each one is missing.
+- `placeholderMismatches`: keys whose placeholders differ between the platforms, with the placeholders on each side.
+- `placeholderDrift`: translations whose placeholders differ from the default value on the same platform.
+- `summary`: the number of missing items, the number of placeholder mismatches, and their total in `problems`.
+
+Keys and locales are sorted, and placeholder entries list the default locale first and then each locale and key in sorted order, so the same input always gives the same output. The exit codes are the same as for text. Only the JSON object goes to stdout. The per-locale counts are left out, and errors such as an unreadable file still go to stderr.
 
 ### Keys named differently on each platform
 
